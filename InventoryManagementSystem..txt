@@ -1,0 +1,172 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+public class InventoryManagementSystem extends JFrame {
+    // Database connection
+    private Connection conn;
+    private PreparedStatement pstmt;
+    private ResultSet rs;
+
+    // GUI Components
+    private JLabel heading, dateLabel, productLabel, quantityLabel, amountLabel, totalLabel;
+    private JTextField productIdField, quantityField, discountField, givenAmountField;
+    private JButton searchButton, addToCartButton, calculateChangeButton, generateBillButton;
+    private JTextArea productListArea;
+    private JScrollPane scrollPane;
+
+    // Temporary lists for storing product details
+    private List<String> productsList = new ArrayList<>();
+    private List<Double> productPriceList = new ArrayList<>();
+    private List<Integer> productQuantityList = new ArrayList<>();
+    private List<Integer> productIdList = new ArrayList<>();
+
+    public InventoryManagementSystem() {
+        initializeDatabase();
+        initComponents();
+        setupGUI();
+    }
+
+    private void initializeDatabase() {
+        try {
+            conn = DriverManager.getConnection("jdbc:sqlite:storedb.db");
+            System.out.println("Database connection established.");
+        } catch (SQLException e) {
+            System.err.println("Error connecting to database: " + e.getMessage());
+        }
+    }
+
+    private void initComponents() {
+        heading = new JLabel("AVI'S INVENTORY SYSTEM", JLabel.CENTER);
+        dateLabel = new JLabel("Date: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), JLabel.CENTER);
+
+        productLabel = new JLabel("Product ID:");
+        productIdField = new JTextField(10);
+
+        quantityLabel = new JLabel("Quantity:");
+        quantityField = new JTextField(10);
+
+        amountLabel = new JLabel("Given Amount:");
+        givenAmountField = new JTextField(10);
+
+        totalLabel = new JLabel("Total:");
+
+        searchButton = new JButton("Search");
+        searchButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                searchProduct();
+            }
+        });
+
+        addToCartButton = new JButton("Add to Cart");
+        addToCartButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                addToCart();
+            }
+        });
+
+        calculateChangeButton = new JButton("Calculate Change");
+        calculateChangeButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                calculateChange();
+            }
+        });
+
+        generateBillButton = new JButton("Generate Bill");
+        generateBillButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                generateBill();
+            }
+        });
+
+        productListArea = new JTextArea(10, 40);
+        productListArea.setEditable(false);
+        scrollPane = new JScrollPane(productListArea);
+    }
+
+    private void setupGUI() {
+        setTitle("Inventory Management System");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridLayout(1, 2));
+
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new GridLayout(6, 2));
+        leftPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        leftPanel.add(heading);
+        leftPanel.add(dateLabel);
+        leftPanel.add(productLabel);
+        leftPanel.add(productIdField);
+        leftPanel.add(quantityLabel);
+        leftPanel.add(quantityField);
+        leftPanel.add(searchButton);
+        leftPanel.add(new JLabel()); // Placeholder
+        leftPanel.add(amountLabel);
+        leftPanel.add(givenAmountField);
+        leftPanel.add(totalLabel);
+        leftPanel.add(new JLabel()); // Placeholder
+        leftPanel.add(addToCartButton);
+        leftPanel.add(calculateChangeButton);
+        leftPanel.add(generateBillButton);
+
+        JPanel rightPanel = new JPanel();
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        rightPanel.setLayout(new BorderLayout());
+        rightPanel.add(new JLabel("Products List:"), BorderLayout.NORTH);
+        rightPanel.add(scrollPane, BorderLayout.CENTER);
+
+        add(leftPanel);
+        add(rightPanel);
+
+        pack();
+        setVisible(true);
+    }
+
+    private void searchProduct() {
+        int productId = Integer.parseInt(productIdField.getText());
+        try {
+            String query = "SELECT * FROM inventory WHERE id=?";
+            pstmt = conn.prepareStatement(query);
+            pstmt.setInt(1, productId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String productName = rs.getString("name");
+                double productPrice = rs.getDouble("price");
+
+                productListArea.append("Product Name: " + productName + "\n");
+                productListArea.append("Price: RS. " + productPrice + "\n");
+            } else {
+                JOptionPane.showMessageDialog(this, "Product not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addToCart() {
+        // Implement logic to add product to cart
+    }
+
+    private void calculateChange() {
+        // Implement logic to calculate change
+    }
+
+    private void generateBill() {
+        // Implement logic to generate bill
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new InventoryManagementSystem();
+            }
+        });
+    }
+}
